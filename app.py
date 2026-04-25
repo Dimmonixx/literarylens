@@ -75,31 +75,47 @@ if st.button("Анализировать", type="primary", use_container_width=T
             )
             characters = json.loads(char_response.choices[0].message.content)
 
-        for char in characters:
-            colors = color_map.get(char['role'], {"bg": "#F1EFE8", "text": "#444441"})
-            initials = "".join([w[0] for w in char['name'].split()][:2]).upper()
+        def get_lexica_image(char_name, book_name, emotion):
+    try:
+        query = f"{char_name} {book_name} portrait painting {emotion}"
+        url = f"https://lexica.art/api/v1/search?q={query}"
+        response = requests.get(url, timeout=5)
+        data = response.json()
+        if data.get("images"):
+            return data["images"][0]["src"]
+    except:
+        pass
+    return None
 
-            with st.container(border=True):
-                col_img, col_info = st.columns([1, 2])
-                with col_img:
-                    st.markdown(f"""
-                    <div style="
-                        background:{colors['bg']};
-                        color:{colors['text']};
-                        width:100%;
-                        aspect-ratio:1;
-                        border-radius:12px;
-                        display:flex;
-                        align-items:center;
-                        justify-content:center;
-                        font-size:48px;
-                        font-weight:500;">
-                        {initials}
-                    </div>
-                    """, unsafe_allow_html=True)
-                with col_info:
-                    st.markdown(f"### {char['name']}")
-                    st.markdown(f"<span style='background:{colors['bg']};color:{colors['text']};padding:2px 10px;border-radius:8px;font-size:12px'>{char['role']}</span>", unsafe_allow_html=True)
-                    st.markdown(f"**Эмоция:** {char['emotion']}")
-                    st.markdown(f"**Цель:** {char['goal']}")
-                    st.markdown(f"**Конфликт:** {char['conflict']}")
+for char in characters:
+    colors = color_map.get(char['role'], {"bg": "#F1EFE8", "text": "#444441"})
+    initials = "".join([w[0] for w in char['name'].split()][:2]).upper()
+
+    with st.container(border=True):
+        col_img, col_info = st.columns([1, 2])
+        with col_img:
+            img_url = get_lexica_image(char['name'], book_title, char['emotion'])
+            if img_url:
+                st.image(img_url, use_container_width=True)
+            else:
+                st.markdown(f"""
+                <div style="
+                    background:{colors['bg']};
+                    color:{colors['text']};
+                    width:100%;
+                    aspect-ratio:1;
+                    border-radius:12px;
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                    font-size:48px;
+                    font-weight:500;">
+                    {initials}
+                </div>
+                """, unsafe_allow_html=True)
+        with col_info:
+            st.markdown(f"### {char['name']}")
+            st.markdown(f"<span style='background:{colors['bg']};color:{colors['text']};padding:2px 10px;border-radius:8px;font-size:12px'>{char['role']}</span>", unsafe_allow_html=True)
+            st.markdown(f"**Эмоция:** {char['emotion']}")
+            st.markdown(f"**Цель:** {char['goal']}")
+            st.markdown(f"**Конфликт:** {char['conflict']}")
