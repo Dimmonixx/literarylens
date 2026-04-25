@@ -22,14 +22,15 @@ color_map = {
     "Второстепенный":  {"bg": "#E1F5EE", "text": "#085041"}
 }
 
-def get_lexica_image(char_name, book_name, emotion):
+def get_unsplash_image(char_name, book_name, emotion):
     try:
-        query = f"{char_name} {book_name} portrait painting {emotion}"
-        url = f"https://lexica.art/api/v1/search?q={query}"
+        unsplash_key = st.secrets["UNSPLASH_ACCESS_KEY"]
+        query = f"{char_name} {book_name} portrait"
+        url = f"https://api.unsplash.com/search/photos?query={query}&per_page=1&client_id={unsplash_key}"
         response = requests.get(url, timeout=5)
         data = response.json()
-        if data.get("images"):
-            return data["images"][0]["src"]
+        if data.get("results"):
+            return data["results"][0]["urls"]["regular"]
     except:
         pass
     return None
@@ -94,7 +95,7 @@ if st.button("Анализировать", type="primary", use_container_width=T
             with st.container(border=True):
                 col_img, col_info = st.columns([1, 2])
                 with col_img:
-                    img_url = get_lexica_image(char['name'], book_title, char['emotion'])
+                    img_url = get_unsplash_image(char['name'], book_title, char['emotion'])
                     if img_url:
                         st.image(img_url, use_container_width=True)
                     else:
