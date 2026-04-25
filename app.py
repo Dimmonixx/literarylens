@@ -16,19 +16,10 @@ st.subheader("понимай книги через живой опыт")
 
 st.divider()
 
-def get_character_image(character_name, emotion):
-    keywords = {
-        "Любовь": "romantic portrait painting",
-        "Тоска": "melancholy portrait painting",
-        "Игривость": "mysterious dark portrait",
-        "Безразличие": "cold distant portrait",
-        "Страдание": "suffering portrait painting",
-        "Страх": "fearful portrait painting",
-        "Гордость": "proud noble portrait",
-        "Ненависть": "dark villain portrait"
-    }
-    keyword = keywords.get(emotion, "classical portrait painting")
-    return f"https://source.unsplash.com/300x400/?{keyword.replace(' ', ',')}"
+def get_character_image(index):
+    seeds = [10, 20, 30, 40]
+    seed = seeds[index % len(seeds)]
+    return f"https://picsum.photos/seed/{seed}/300/400"
 
 book_title = st.text_input("Название книги:", placeholder="Например: Мастер и Маргарита")
 
@@ -87,7 +78,7 @@ if st.button("Анализировать", type="primary", use_container_width=T
             with st.container(border=True):
                 col_img, col_info = st.columns([1, 2])
                 with col_img:
-                    img_url = get_character_image(char['name'], char['emotion'])
+                    img_url = get_character_image(characters.index(char))
                     if img_url:
                         st.image(img_url, use_container_width=True)
                     else:
