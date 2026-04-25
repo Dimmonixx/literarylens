@@ -76,25 +76,19 @@ if st.button("Анализировать", type="primary", use_container_width=T
 
         for char in characters:
             with st.container(border=True):
-                col_img, col_info = st.columns([1, 3])
+                st.markdown(f"### {char['name']}")
                 
-                with col_img:
-                    with st.spinner("🎨"):
-                        img_response = client.images.generate(
-                            model="dall-e-3",
-                            prompt=f"Портрет персонажа '{char['name']}' из книги '{book_title}'. Художественный стиль, книжная иллюстрация, без текста.",
-                            size="1024x1024",
-                            n=1
-                        )
-                        img_url = img_response.data[0].url
-                        st.image(img_url, use_container_width=True)
+                emoji_map = {
+                    "Главный герой": "🦸",
+                    "Антагонист": "🦹",
+                    "Второстепенный": "👤"
+                }
+                emoji = emoji_map.get(char['role'], "👤")
                 
-                with col_info:
-                    st.markdown(f"### {char['name']}")
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        st.markdown(f"**Роль:** {char['role']}")
-                        st.markdown(f"**Эмоция:** {char['emotion']}")
-                    with col2:
-                        st.markdown(f"**Цель:** {char['goal']}")
-                        st.markdown(f"**Конфликт:** {char['conflict']}")
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.markdown(f"{emoji} **Роль:** {char['role']}")
+                    st.markdown(f"💭 **Эмоция:** {char['emotion']}")
+                with col2:
+                    st.markdown(f"🎯 **Цель:** {char['goal']}")
+                    st.markdown(f"⚡ **Конфликт:** {char['conflict']}")
