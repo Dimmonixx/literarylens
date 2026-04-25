@@ -18,21 +18,14 @@ st.divider()
 
 def get_character_image(char_name, book_name):
     try:
-        search_response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {
-                    "role": "user",
-                    "content": f"Персонаж '{char_name}' из книги '{book_name}'. Напиши ТОЛЬКО английское название этого персонажа для поиска в Wikipedia. Только имя, без пояснений."
-                }
-            ]
-        )
-        english_name = search_response.choices[0].message.content.strip()
-        url = "https://en.wikipedia.org/api/rest_v1/page/summary/" + english_name.replace(" ", "_")
+        google_api_key = st.secrets["GOOGLE_API_KEY"]
+        cse_id = st.secrets["GOOGLE_CSE_ID"]
+        query = f"{char_name} {book_name} character portrait"
+        url = f"https://www.googleapis.com/customsearch/v1?q={query}&cx={cse_id}&key={google_api_key}&searchType=image&num=1"
         response = requests.get(url, timeout=5)
         data = response.json()
-        if "thumbnail" in data:
-            return data["thumbnail"]["source"]
+        if "items" in data:
+            return data["items"][0]["link"]
     except:
         pass
     return None
