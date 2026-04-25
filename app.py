@@ -16,10 +16,26 @@ st.subheader("понимай книги через живой опыт")
 
 st.divider()
 
-def get_character_image(index):
-    seeds = [10, 20, 30, 40]
-    seed = seeds[index % len(seeds)]
-    return f"https://picsum.photos/seed/{seed}/300/400"
+def get_character_image(char_name, book_name):
+    try:
+        search_response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {
+                    "role": "user",
+                    "content": f"Персонаж '{char_name}' из книги '{book_name}'. Напиши ТОЛЬКО английское название этого персонажа для поиска в Wikipedia. Только имя, без пояснений."
+                }
+            ]
+        )
+        english_name = search_response.choices[0].message.content.strip()
+        url = "https://en.wikipedia.org/api/rest_v1/page/summary/" + english_name.replace(" ", "_")
+        response = requests.get(url, timeout=5)
+        data = response.json()
+        if "thumbnail" in data:
+            return data["thumbnail"]["source"]
+    except:
+        pass
+    return None
 
 book_title = st.text_input("Название книги:", placeholder="Например: Мастер и Маргарита")
 
@@ -78,7 +94,7 @@ if st.button("Анализировать", type="primary", use_container_width=T
             with st.container(border=True):
                 col_img, col_info = st.columns([1, 2])
                 with col_img:
-                    img_url = get_character_image(characters.index(char))
+                    img_url = get_character_image(char['name'], book_title)
                     if img_url:
                         st.image(img_url, use_container_width=True)
                     else:
