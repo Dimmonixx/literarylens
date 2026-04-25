@@ -83,18 +83,38 @@ if st.button("Анализировать", type="primary", use_container_width=T
             )
             characters = json.loads(char_response.choices[0].message.content)
 
-        for char in characters:
-            with st.container(border=True):
-                col_img, col_info = st.columns([1, 2])
-                with col_img:
-                    img_url = get_character_image(char['name'], book_title)
-                    if img_url:
-                        st.image(img_url, use_container_width=True)
-                    else:
-                        st.markdown("<div style='background:#f0f0f0;height:150px;display:flex;align-items:center;justify-content:center;border-radius:10px;font-size:48px'>👤</div>", unsafe_allow_html=True)
-                with col_info:
-                    st.markdown(f"### {char['name']}")
-                    st.markdown(f"**Роль:** {char['role']}")
-                    st.markdown(f"**Эмоция:** {char['emotion']}")
-                    st.markdown(f"**Цель:** {char['goal']}")
-                    st.markdown(f"**Конфликт:** {char['conflict']}")
+        color_map = {
+    "Главный герой": {"bg": "#EEEDFE", "text": "#3C3489"},
+    "Главная героиня": {"bg": "#FBEAF0", "text": "#72243E"},
+    "Антагонист": {"bg": "#FAECE7", "text": "#712B13"},
+    "Второстепенный": {"bg": "#E1F5EE", "text": "#085041"}
+}
+
+for char in characters:
+    colors = color_map.get(char['role'], {"bg": "#F1EFE8", "text": "#444441"})
+    initials = "".join([w[0] for w in char['name'].split()][:2]).upper()
+    
+    with st.container(border=True):
+        col_img, col_info = st.columns([1, 2])
+        with col_img:
+            st.markdown(f"""
+            <div style="
+                background:{colors['bg']};
+                color:{colors['text']};
+                width:100%;
+                aspect-ratio:1;
+                border-radius:12px;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                font-size:48px;
+                font-weight:500;">
+                {initials}
+            </div>
+            """, unsafe_allow_html=True)
+        with col_info:
+            st.markdown(f"### {char['name']}")
+            st.markdown(f"<span style='background:{colors['bg']};color:{colors['text']};padding:2px 10px;border-radius:8px;font-size:12px'>{char['role']}</span>", unsafe_allow_html=True)
+            st.markdown(f"**Эмоция:** {char['emotion']}")
+            st.markdown(f"**Цель:** {char['goal']}")
+            st.markdown(f"**Конфликт:** {char['conflict']}")
