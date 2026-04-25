@@ -1,6 +1,7 @@
 import streamlit as st
 from openai import OpenAI
 import json
+import requests
 
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
@@ -11,9 +12,20 @@ st.set_page_config(
 )
 
 st.title("📚 LiteraryLens")
-st.subheader("Понимай книги через живой опыт")
+st.subheader("понимай книги через живой опыт")
 
 st.divider()
+
+def get_wiki_image(name):
+    try:
+        url = "https://en.wikipedia.org/api/rest_v1/page/summary/" + name.replace(" ", "_")
+        response = requests.get(url, timeout=5)
+        data = response.json()
+        if "thumbnail" in data:
+            return data["thumbnail"]["source"]
+    except:
+        pass
+    return None
 
 book_title = st.text_input("Название книги:", placeholder="Например: Мастер и Маргарита")
 
@@ -21,7 +33,6 @@ if st.button("Анализировать", type="primary", use_container_width=T
     if not book_title:
         st.warning("Введи название книги!")
     else:
-        # Блок 1: Анализ книги
         with st.spinner("Анализирую книгу..."):
             response = client.chat.completions.create(
                 model="gpt-4o-mini",
@@ -40,10 +51,7 @@ if st.button("Анализировать", type="primary", use_container_width=T
 
         st.success("Готово!")
         st.markdown(analysis)
-
         st.divider()
-
-        # Блок 2: Персонажи
         st.subheader("🎭 Персонажи")
 
         with st.spinner("Анализирую персонажей..."):
@@ -70,25 +78,20 @@ if st.button("Анализировать", type="primary", use_container_width=T
                     }
                 ]
             )
-            
-            characters_text = char_response.choices[0].message.content
-            characters = json.loads(characters_text)
+            characters = json.loads(char_response.choices[0].message.content)
 
         for char in characters:
             with st.container(border=True):
-                st.markdown(f"### {char['name']}")
-                
-                emoji_map = {
-                    "Главный герой": "🦸",
-                    "Антагонист": "🦹",
-                    "Второстепенный": "👤"
-                }
-                emoji = emoji_map.get(char['role'], "👤")
-                
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.markdown(f"{emoji} **Роль:** {char['role']}")
-                    st.markdown(f"💭 **Эмоция:** {char['emotion']}")
-                with col2:
-                    st.markdown(f"🎯 **Цель:** {char['goal']}")
-                    st.markdown(f"⚡ **Конфликт:** {char['conflict']}")
+                col_img, col_info = st.columns([1, 2])
+                with col_img:
+                    img_url = get_wiki_image(char['name'])
+                    if img_url:
+                        st.image(img_url, use_container_width=True)
+                    else:
+                        st.markdown("<div style='background:#f0f0f0;height:150px;display:flex;align-items:center;justify-content:center;border-radius:10px;font-size:48px'>👤</div>", unsafe_allow_html=True)
+                with col_info:
+                    st.markdown(f"### {char['name']}")
+                    st.markdown(f"**Роль:** {char['role']}")
+                    st.markdown(f"**Эмоция:** {char['emotion']}")
+                    st.markdown(f"**Цель:** {char['goal']}")
+                    st.markdown(f"**Конфликт:** {char['conflict']}")
