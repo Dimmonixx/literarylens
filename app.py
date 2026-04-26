@@ -193,12 +193,7 @@ if st.session_state.analysis:
     st.divider()
     st.subheader("💡 Смыслы и идеи")
 
-    with st.spinner("Ищу глубокие смыслы..."):
-        meanings_response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": "Ты мудрый друг который объясняет книги просто и глубоко. Без академичности."},
-                {"role": "user", "content": f"""Книга: {book_title}
+    meanings_prompt = "Книга: " + book_title + """
 
 Верни JSON массив с 4 главными смыслами и идеями книги.
 Отвечай ТОЛЬКО на русском языке.
@@ -208,7 +203,14 @@ if st.session_state.analysis:
   "simple": "Объяснение простым языком — как другу, 2-3 предложения",
   "question": "Вопрос для размышления читателю",
   "emoji": "Один эмодзи"
-}"""}
+}"""
+
+    with st.spinner("Ищу глубокие смыслы..."):
+        meanings_response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "Ты мудрый друг который объясняет книги просто и глубоко. Без академичности. Отвечай ТОЛЬКО валидным JSON без markdown и без пояснений."},
+                {"role": "user", "content": meanings_prompt}
             ]
         )
         meanings = json.loads(meanings_response.choices[0].message.content)
