@@ -28,7 +28,7 @@ used_images = set()
 
 def build_query(char):
     gender = char.get("gender", "")
-    emotion = char.get("emotion", "")
+    emotion = char.get("emotion_en", char.get("emotion", ""))
     role = char.get("role", "")
     return f"{gender} {emotion} {role} portrait face cinematic lighting -group -crowd"
 
@@ -112,7 +112,8 @@ if st.button("Анализировать", type="primary", use_container_width=T
   "name": "Имя персонажа на русском",
   "gender": "male или female",
   "role": "Главный герой / Главная героиня / Антагонист / Второстепенный",
-  "emotion": "Основная эмоция на английском (melancholy, love, anger, joy, fear)",
+  "emotion": "Основная эмоция на русском (тоска, любовь, гнев, радость, страх)",
+  "emotion_en": "Same emotion in English for image search (melancholy, love, anger, joy, fear)",
   "goal": "Главная цель на русском в одном предложении",
   "conflict": "Главный конфликт на русском в одном предложении"
 }}"""
@@ -133,6 +134,6 @@ if st.button("Анализировать", type="primary", use_container_width=T
                 with col_info:
                     st.markdown(f"### {char['name']}")
                     st.markdown(f"<span style='background:{colors['bg']};color:{colors['text']};padding:2px 10px;border-radius:8px;font-size:12px'>{char['role']}</span>", unsafe_allow_html=True)
-                    st.markdown(f"**Эмоция:** {char['emotion']}")
+                    st.markdown(f"**Эмоция:** {char.get('emotion', '')}")
                     st.markdown(f"**Цель:** {char['goal']}")
                     st.markdown(f"**Конфликт:** {char['conflict']}")
