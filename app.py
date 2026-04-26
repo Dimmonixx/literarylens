@@ -141,3 +141,51 @@ if st.button("Анализировать", type="primary", use_container_width=T
                     st.markdown(f"**Эмоция:** {char.get('emotion', '')}")
                     st.markdown(f"**Цель:** {char['goal']}")
                     st.markdown(f"**Конфликт:** {char['conflict']}")
+                    
+                    if st.button(f"💬 Поговорить с {char['name']}", key=f"chat_{char['name']}"):
+                        st.session_state.active_char = char
+
+        if "active_char" in st.session_state:
+            char = st.session_state.active_char
+            colors = color_map.get(char['role'], {"bg": "#F1EFE8", "text": "#444441"})
+
+            st.divider()
+            st.subheader(f"💬 Чат с {char['name']}")
+
+            if "messages" not in st.session_state:
+                st.session_state.messages = []
+
+            if st.button("🔄 Начать новый чат"):
+                st.session_state.messages = []
+
+            for msg in st.session_state.messages:
+                with st.chat_message(msg["role"]):
+                    st.markdown(msg["content"])
+
+            user_input = st.chat_input(f"Напиши {char['name']}...")
+
+            if user_input:
+                st.session_state.messages.append({"role": "user", "content": user_input})
+
+                system_prompt = f"""Ты {char['name']} из книги "{book_title}".
+Твоя роль: {char['role']}.
+Твоя эмоция: {char['emotion']}.
+Твоя цель: {char['goal']}.
+Твой конфликт: {char['conflict']}.
+
+Отвечай от первого лица, в характере персонажа.
+Говори как этот персонаж — его словами, его эмоциями.
+Отвечай на русском языке. Максимум 3-4 предложения."""
+
+                with st.spinner(f"{char['name']} думает..."):
+                    chat_response = client.chat.completions.create(
+                        model="gpt-4o-mini",
+                        messages=[
+                            {"role": "system", "content": system_prompt},
+                            *st.session_state.messages
+                        ]
+                    )
+                    reply = chat_response.choices[0].message.content
+
+                st.session_state.messages.append({"role": "assistant", "content": reply})
+                st.rerun()
