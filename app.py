@@ -134,6 +134,63 @@ if st.session_state.analysis:
     st.success("Готово!")
     st.markdown(st.session_state.analysis)
     st.divider()
+    st.subheader("🎬 Ключевые сцены")
+
+    with st.spinner("Анализирую сцены..."):
+        scenes_response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "Ты литературный эксперт. Отвечай ТОЛЬКО валидным JSON без markdown и без пояснений."},
+                {"role": "user", "content": f"""Книга: {book_title}
+
+Верни JSON массив с 4 ключевыми сценами книги.
+Отвечай ТОЛЬКО на русском языке.
+Формат каждой сцены:
+{{
+  "title": "Название сцены",
+  "description": "Описание сцены в 2-3 предложениях",
+  "mood": "Настроение сцены одним словом",
+  "mood_emoji": "Один эмодзи отражающий настроение",
+  "characters": "Персонажи через запятую"
+}}"""}
+            ]
+        )
+        scenes = json.loads(scenes_response.choices[0].message.content)
+
+    mood_colors = {
+        "тревога": "#2D1B1B",
+        "страх": "#1A1A2E",
+        "любовь": "#2D1B2D",
+        "радость": "#1B2D1B",
+        "грусть": "#1B1B2D",
+        "напряжение": "#2D2D1B",
+        "мистика": "#1B2D2D",
+        "надежда": "#1B2B1B"
+    }
+
+    for i, scene in enumerate(scenes):
+        bg_color = mood_colors.get(scene['mood'].lower(), "#1E1E2E")
+        st.markdown(f"""
+        <div style="
+            background:{bg_color};
+            border-radius:12px;
+            padding:20px;
+            margin-bottom:16px;
+            border-left:4px solid #6C63FF;">
+            <div style="color:#888;font-size:12px;margin-bottom:4px">СЦЕНА {i+1}</div>
+            <div style="color:white;font-size:20px;font-weight:600;margin-bottom:8px">
+                {scene['mood_emoji']} {scene['title']}
+            </div>
+            <div style="color:#CCC;font-size:14px;margin-bottom:12px">
+                {scene['description']}
+            </div>
+            <div style="color:#888;font-size:12px">
+                👥 {scene['characters']} &nbsp;&nbsp; 🎭 {scene['mood']}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.divider()
     st.subheader("🎭 Персонажи")
 
     for char in st.session_state.characters:
