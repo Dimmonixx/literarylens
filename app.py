@@ -55,13 +55,17 @@ def get_character_image(char, max_attempts=3):
 def show_image(url, colors, initials):
     if url:
         try:
-            st.image(url, use_container_width=True)
+            st.markdown(f"""
+            <div style="width:100%;height:280px;overflow:hidden;border-radius:12px;">
+                <img src="{url}" style="width:100%;height:100%;object-fit:cover;object-position:top;">
+            </div>
+            """, unsafe_allow_html=True)
             return
         except:
             pass
     st.markdown(f"""
     <div style="background:{colors['bg']};color:{colors['text']};
-    width:100%;aspect-ratio:1;border-radius:12px;
+    width:100%;height:280px;border-radius:12px;
     display:flex;align-items:center;justify-content:center;
     font-size:48px;font-weight:500;">{initials}</div>
     """, unsafe_allow_html=True)
