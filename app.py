@@ -158,37 +158,37 @@ if st.session_state.analysis:
         scenes = json.loads(scenes_response.choices[0].message.content)
 
     mood_colors = {
-        "тревога": "#2D1B1B",
-        "страх": "#1A1A2E",
-        "любовь": "#2D1B2D",
-        "радость": "#1B2D1B",
-        "грусть": "#1B1B2D",
-        "напряжение": "#2D2D1B",
-        "мистика": "#1B2D2D",
-        "надежда": "#1B2B1B"
-    }
+            "тревога":     {"bg": "#FFF3E0", "border": "#FF9800", "text": "#333"},
+            "страх":       {"bg": "#FCE4EC", "border": "#E91E63", "text": "#333"},
+            "любовь":      {"bg": "#FCE4EC", "border": "#E91E63", "text": "#333"},
+            "радость":     {"bg": "#E8F5E9", "border": "#4CAF50", "text": "#333"},
+            "грусть":      {"bg": "#E3F2FD", "border": "#2196F3", "text": "#333"},
+            "напряжение": {"bg": "#FFF8E1", "border": "#FFC107", "text": "#333"},
+            "мистика":     {"bg": "#EDE7F6", "border": "#673AB7", "text": "#333"},
+            "надежда":     {"bg": "#E8F5E9", "border": "#4CAF50", "text": "#333"}
+        }
 
     for i, scene in enumerate(scenes):
-        bg_color = mood_colors.get(scene['mood'].lower(), "#1E1E2E")
+        colors = mood_colors.get(scene['mood'].lower(), {"bg": "#F5F5F5", "border": "#9E9E9E", "text": "#333"})
         st.markdown(f"""
-        <div style="
-            background:{bg_color};
-            border-radius:12px;
-            padding:20px;
-            margin-bottom:16px;
-            border-left:4px solid #6C63FF;">
-            <div style="color:#888;font-size:12px;margin-bottom:4px">СЦЕНА {i+1}</div>
-            <div style="color:white;font-size:20px;font-weight:600;margin-bottom:8px">
-                {scene['mood_emoji']} {scene['title']}
+            <div style="
+                background:{colors['bg']};
+                border-radius:12px;
+                padding:20px;
+                margin-bottom:16px;
+                border-left:4px solid {colors['border']};">
+                <div style="color:#888;font-size:12px;margin-bottom:4px">СЦЕНА {i+1}</div>
+                <div style="color:{colors['text']};font-size:20px;font-weight:600;margin-bottom:8px">
+                    {scene['mood_emoji']} {scene['title']}
+                </div>
+                <div style="color:#555;font-size:14px;margin-bottom:12px">
+                    {scene['description']}
+                </div>
+                <div style="color:#888;font-size:12px">
+                    👥 {scene['characters']} &nbsp;&nbsp; 🎭 {scene['mood']}
+                </div>
             </div>
-            <div style="color:#CCC;font-size:14px;margin-bottom:12px">
-                {scene['description']}
-            </div>
-            <div style="color:#888;font-size:12px">
-                👥 {scene['characters']} &nbsp;&nbsp; 🎭 {scene['mood']}
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
 
     st.divider()
     st.subheader("🎭 Персонажи")
