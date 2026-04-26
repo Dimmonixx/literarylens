@@ -118,15 +118,11 @@ with st.sidebar:
     
     if st.session_state.analysis:
         st.divider()
-        st.markdown("### 📖 Навигация")
-        if st.button("🎬 Ключевые сцены", use_container_width=True):
-            st.session_state.scroll_to = "scenes"
-        if st.button("🎭 Персонажи", use_container_width=True):
-            st.session_state.scroll_to = "characters"
-        if st.button("💡 Смыслы и идеи", use_container_width=True):
-            st.session_state.scroll_to = "meanings"
-        if st.button("💬 Чат с персонажем", use_container_width=True):
-            st.session_state.scroll_to = "chat"
+        st.markdown("### 📖 Содержание")
+        st.markdown("🎬 Ключевые сцены")
+        st.markdown("🎭 Персонажи")
+        st.markdown("💡 Смыслы и идеи")
+        st.markdown("💬 Чат с персонажем")
         
         if st.session_state.active_char:
             st.divider()
