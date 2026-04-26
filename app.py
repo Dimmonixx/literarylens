@@ -114,41 +114,18 @@ def show_image(url, colors, initials):
 
 with st.sidebar:
     st.title("📚 LiteraryLens")
-    st.caption("Понимай книги так, будто ты внутри истории")
+    st.caption("Понимай книги через живой опыт")
     st.divider()
-    st.divider()
-    default_book = st.session_state.get("quick_book", "")
-    book_title = st.text_input("Или введи свою книгу:", value=default_book, placeholder="Например: Преступление и наказание")
+    book_title = st.text_input("Название книги:", placeholder="Например: Мастер и Маргарита")
     analyze_btn = st.button("Анализировать", type="primary", use_container_width=True)
-    
-    if st.session_state.analysis:
-        st.divider()
-        st.markdown("""
-    🎬 Смотри сцены  
-    🎭 Общайся с героями  
-    🧠 Понимай глубинные смыслы  
-    """)
-    st.divider()
-    st.markdown("**Попробуй:**")
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("Мастер и Маргарита", use_container_width=True):
-            st.session_state.quick_book = "Мастер и Маргарита"
-        if st.button("1984", use_container_width=True):
-            st.session_state.quick_book = "1984"
-    with col2:
-        if st.button("Гарри Поттер", use_container_width=True):
-            st.session_state.quick_book = "Гарри Поттер"
-        if st.button("Алхимик", use_container_width=True):
-            st.session_state.quick_book = "Алхимик"
         
-        if st.session_state.active_char:
-            st.divider()
-            st.markdown(f"**Чат с:** {st.session_state.active_char['name']}")
-            if st.button("🔄 Сменить персонажа"):
-                st.session_state.active_char = None
-                st.session_state.messages = []
-                st.rerun()
+    if st.session_state.active_char:
+        st.divider()
+        st.markdown(f"**Чат с:** {st.session_state.active_char['name']}")
+        if st.button("🔄 Сменить персонажа"):
+            st.session_state.active_char = None
+            st.session_state.messages = []
+            st.rerun()
 
 if analyze_btn:
     if not book_title:
