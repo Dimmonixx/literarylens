@@ -190,6 +190,29 @@ if st.session_state.analysis:
             </div>
             """, unsafe_allow_html=True)
 
+    
+    st.divider()
+    st.subheader("🎭 Персонажи")
+
+    for char in st.session_state.characters:
+        colors = color_map.get(char['role'], {"bg": "#F1EFE8", "text": "#444441"})
+        initials = "".join([w[0] for w in char['name'].split()][:2]).upper()
+
+        with st.container(border=True):
+            col_img, col_info = st.columns([1, 2])
+            with col_img:
+                show_image(char.get("img_url"), colors, initials)
+            with col_info:
+                st.markdown(f"### {char['name']}")
+                st.markdown(f"<span style='background:{colors['bg']};color:{colors['text']};padding:2px 10px;border-radius:8px;font-size:12px'>{char['role']}</span>", unsafe_allow_html=True)
+                st.markdown(f"**Эмоция:** {char.get('emotion', '')}")
+                st.markdown(f"**Цель:** {char['goal']}")
+                st.markdown(f"**Конфликт:** {char['conflict']}")
+                if st.button(f"💬 Поговорить с {char['name']}", key=f"chat_{char['name']}"):
+                    st.session_state.active_char = char
+                    st.session_state.messages = []
+                    st.rerun()
+
     st.divider()
     st.subheader("💡 Смыслы и идеи")
 
@@ -216,32 +239,10 @@ if st.session_state.analysis:
         meanings = json.loads(meanings_response.choices[0].message.content)
 
     for meaning in meanings:
-        with st.container():
+        with st.container(border=True):
             st.markdown(f"### {meaning['emoji']} {meaning['title']}")
             st.markdown(meaning['simple'])
             st.info(f"🤔 {meaning['question']}")
-
-    st.divider()
-    st.subheader("🎭 Персонажи")
-
-    for char in st.session_state.characters:
-        colors = color_map.get(char['role'], {"bg": "#F1EFE8", "text": "#444441"})
-        initials = "".join([w[0] for w in char['name'].split()][:2]).upper()
-
-        with st.container(border=True):
-            col_img, col_info = st.columns([1, 2])
-            with col_img:
-                show_image(char.get("img_url"), colors, initials)
-            with col_info:
-                st.markdown(f"### {char['name']}")
-                st.markdown(f"<span style='background:{colors['bg']};color:{colors['text']};padding:2px 10px;border-radius:8px;font-size:12px'>{char['role']}</span>", unsafe_allow_html=True)
-                st.markdown(f"**Эмоция:** {char.get('emotion', '')}")
-                st.markdown(f"**Цель:** {char['goal']}")
-                st.markdown(f"**Конфликт:** {char['conflict']}")
-                if st.button(f"💬 Поговорить с {char['name']}", key=f"chat_{char['name']}"):
-                    st.session_state.active_char = char
-                    st.session_state.messages = []
-                    st.rerun()
 
 if st.session_state.active_char:
     char = st.session_state.active_char
