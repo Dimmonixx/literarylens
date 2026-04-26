@@ -24,11 +24,27 @@ color_map = {
     "Второстепенный":  {"bg": "#E1F5EE", "text": "#085041"}
 }
 
-used_images = set()
+if "used_images" not in st.session_state:
+    st.session_state.used_images = set()
+
+if "characters" not in st.session_state:
+    st.session_state.characters = []
+
+if "analysis" not in st.session_state:
+    st.session_state.analysis = ""
+
+if "active_char" not in st.session_state:
+    st.session_state.active_char = None
+
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+if "book_title" not in st.session_state:
+    st.session_state.book_title = ""
 
 def build_query(char):
     gender = char.get("gender", "")
-    emotion = char.get("emotion_en", char.get("emotion", ""))
+    emotion = char.get("emotion_en", "")
     role = char.get("role", "")
     return f"{gender} {emotion} {role} portrait face cinematic lighting -group -crowd"
 
@@ -44,8 +60,8 @@ def get_character_image(char, max_attempts=3):
             }, timeout=5)
             data = response.json()
             for img in data.get("results", []):
-                if img["id"] not in used_images:
-                    used_images.add(img["id"])
+                if img["id"] not in st.session_state.used_images:
+                    st.session_state.used_images.add(img["id"])
                     return img["urls"]["regular"]
         except:
             pass
@@ -54,21 +70,18 @@ def get_character_image(char, max_attempts=3):
 
 def show_image(url, colors, initials):
     if url:
-        try:
-            st.markdown(f"""
-            <div style="width:100%;height:280px;overflow:hidden;border-radius:12px;">
-                <img src="{url}" style="width:100%;height:100%;object-fit:cover;object-position:top;">
-            </div>
-            """, unsafe_allow_html=True)
-            return
-        except:
-            pass
-    st.markdown(f"""
-    <div style="background:{colors['bg']};color:{colors['text']};
-    width:100%;height:280px;border-radius:12px;
-    display:flex;align-items:center;justify-content:center;
-    font-size:48px;font-weight:500;">{initials}</div>
-    """, unsafe_allow_html=True)
+        st.markdown(f"""
+        <div style="width:100%;height:280px;overflow:hidden;border-radius:12px;">
+            <img src="{url}" style="width:100%;height:100%;object-fit:cover;object-position:top;">
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown(f"""
+        <div style="background:{colors['bg']};color:{colors['text']};
+        width:100%;height:280px;border-radius:12px;
+        display:flex;align-items:center;justify-content:center;
+        font-size:48px;font-weight:500;">{initials}</div>
+        """, unsafe_allow_html=True)
 
 book_title = st.text_input("Название книги:", placeholder="Например: Мастер и Маргарита")
 
@@ -76,38 +89,27 @@ if st.button("Анализировать", type="primary", use_container_width=T
     if not book_title:
         st.warning("Введи название книги!")
     else:
-        with st.spinner("Анализирую книгу..."):
+        st.session_state.book_title = book_title
+        st.session_state.active_char = None
+        st.session_state.messages = []
+        st.session_state.used_images = set()
+
+        with st.spinner("анализирую книгу..."):
             response = client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[
-                    {
-                        "role": "system",
-                        "content": "Ты литературный эксперт. Отвечай просто и понятно, без академичности."
-                    },
-                    {
-                        "role": "user",
-                        "content": f"Книга: {book_title}\n\nДай краткий анализ: о чём эта книга, главные темы и идеи. Максимум 3 абзаца."
-                    }
+                    {"role": "system", "content": "Ты литературный эксперт. Отвечай просто и понятно, без академичности."},
+                    {"role": "user", "content": f"Книга: {book_title}\n\nДай краткий анализ: о чём эта книга, главные темы и идеи. Максимум 3 абзаца."}
                 ]
             )
-            analysis = response.choices[0].message.content
+            st.session_state.analysis = response.choices[0].message.content
 
-        st.success("Готово!")
-        st.markdown(analysis)
-        st.divider()
-        st.subheader("🎭 Персонажи")
-
-        with st.spinner("Анализирую персонажей..."):
+        with st.spinner("анализирую персонажей..."):
             char_response = client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[
-                    {
-                        "role": "system",
-                        "content": "Ты литературный эксперт. Отвечай ТОЛЬКО валидным JSON без markdown и без пояснений."
-                    },
-                    {
-                        "role": "user",
-                        "content": f"""Книга: {book_title}
+                    {"role": "system", "content": "Ты литературный эксперт. Отвечай ТОЛЬКО валидным JSON без markdown и без пояснений."},
+                    {"role": "user", "content": f"""Книга: {book_title}
 
 Верни JSON массив с главными персонажами (максимум 4).
 Отвечай ТОЛЬКО на русском языке.
@@ -116,58 +118,65 @@ if st.button("Анализировать", type="primary", use_container_width=T
   "name": "Имя персонажа на русском",
   "gender": "male или female",
   "role": "Главный герой / Главная героиня / Антагонист / Второстепенный",
-  "emotion": "Основная эмоция на русском (тоска, любовь, гнев, радость, страх)",
-  "emotion_en": "Same emotion in English for image search (melancholy, love, anger, joy, fear)",
+  "emotion": "Основная эмоция на русском",
+  "emotion_en": "Same emotion in English",
   "goal": "Главная цель на русском в одном предложении",
   "conflict": "Главный конфликт на русском в одном предложении"
-}}"""
-                    }
+}}"""}
                 ]
             )
-            characters = json.loads(char_response.choices[0].message.content)
+            st.session_state.characters = json.loads(char_response.choices[0].message.content)
 
-        for char in characters:
-            colors = color_map.get(char['role'], {"bg": "#F1EFE8", "text": "#444441"})
-            initials = "".join([w[0] for w in char['name'].split()][:2]).upper()
+        for char in st.session_state.characters:
+            char["img_url"] = get_character_image(char)
 
-            with st.container(border=True):
-                col_img, col_info = st.columns([1, 2])
-                with col_img:
-                    img_url = get_character_image(char)
-                    show_image(img_url, colors, initials)
-                with col_info:
-                    st.markdown(f"### {char['name']}")
-                    st.markdown(f"<span style='background:{colors['bg']};color:{colors['text']};padding:2px 10px;border-radius:8px;font-size:12px'>{char['role']}</span>", unsafe_allow_html=True)
-                    st.markdown(f"**Эмоция:** {char.get('emotion', '')}")
-                    st.markdown(f"**Цель:** {char['goal']}")
-                    st.markdown(f"**Конфликт:** {char['conflict']}")
-                    
-                    if st.button(f"💬 Поговорить с {char['name']}", key=f"chat_{char['name']}"):
-                        st.session_state.active_char = char
+if st.session_state.analysis:
+    st.success("Готово!")
+    st.markdown(st.session_state.analysis)
+    st.divider()
+    st.subheader("🎭 Персонажи")
 
-        if "active_char" in st.session_state:
-            char = st.session_state.active_char
-            colors = color_map.get(char['role'], {"bg": "#F1EFE8", "text": "#444441"})
+    for char in st.session_state.characters:
+        colors = color_map.get(char['role'], {"bg": "#F1EFE8", "text": "#444441"})
+        initials = "".join([w[0] for w in char['name'].split()][:2]).upper()
 
-            st.divider()
-            st.subheader(f"💬 Чат с {char['name']}")
+        with st.container(border=True):
+            col_img, col_info = st.columns([1, 2])
+            with col_img:
+                show_image(char.get("img_url"), colors, initials)
+            with col_info:
+                st.markdown(f"### {char['name']}")
+                st.markdown(f"<span style='background:{colors['bg']};color:{colors['text']};padding:2px 10px;border-radius:8px;font-size:12px'>{char['role']}</span>", unsafe_allow_html=True)
+                st.markdown(f"**Эмоция:** {char.get('emotion', '')}")
+                st.markdown(f"**Цель:** {char['goal']}")
+                st.markdown(f"**Конфликт:** {char['conflict']}")
+                if st.button(f"💬 Поговорить с {char['name']}", key=f"chat_{char['name']}"):
+                    st.session_state.active_char = char
+                    st.session_state.messages = []
+                    st.rerun()
 
-            if "messages" not in st.session_state:
-                st.session_state.messages = []
+if st.session_state.active_char:
+    char = st.session_state.active_char
+    colors = color_map.get(char['role'], {"bg": "#F1EFE8", "text": "#444441"})
 
-            if st.button("🔄 Начать новый чат"):
-                st.session_state.messages = []
+    st.divider()
+    st.subheader(f"💬 Чат с {char['name']}")
 
-            for msg in st.session_state.messages:
-                with st.chat_message(msg["role"]):
-                    st.markdown(msg["content"])
+    if st.button("🔄 Выбрать другого персонажа"):
+        st.session_state.active_char = None
+        st.session_state.messages = []
+        st.rerun()
 
-            user_input = st.chat_input(f"Напиши {char['name']}...")
+    for msg in st.session_state.messages:
+        with st.chat_message(msg["role"]):
+            st.markdown(msg["content"])
 
-            if user_input:
-                st.session_state.messages.append({"role": "user", "content": user_input})
+    user_input = st.chat_input(f"Напиши {char['name']}...")
 
-                system_prompt = f"""Ты {char['name']} из книги "{book_title}".
+    if user_input:
+        st.session_state.messages.append({"role": "user", "content": user_input})
+
+        system_prompt = f"""Ты {char['name']} из книги "{st.session_state.book_title}".
 Твоя роль: {char['role']}.
 Твоя эмоция: {char['emotion']}.
 Твоя цель: {char['goal']}.
@@ -177,15 +186,15 @@ if st.button("Анализировать", type="primary", use_container_width=T
 Говори как этот персонаж — его словами, его эмоциями.
 Отвечай на русском языке. Максимум 3-4 предложения."""
 
-                with st.spinner(f"{char['name']} думает..."):
-                    chat_response = client.chat.completions.create(
-                        model="gpt-4o-mini",
-                        messages=[
-                            {"role": "system", "content": system_prompt},
-                            *st.session_state.messages
-                        ]
-                    )
-                    reply = chat_response.choices[0].message.content
+        with st.spinner(f"{char['name']} думает..."):
+            chat_response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    *st.session_state.messages
+                ]
+            )
+            reply = chat_response.choices[0].message.content
 
-                st.session_state.messages.append({"role": "assistant", "content": reply})
-                st.rerun()
+        st.session_state.messages.append({"role": "assistant", "content": reply})
+        st.rerun()
