@@ -2,8 +2,10 @@ import streamlit as st
 from openai import OpenAI
 import json
 import requests
+import time
 
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+UNSPLASH_KEY = st.secrets["UNSPLASH_ACCESS_KEY"]
 
 st.set_page_config(
     page_title="LiteraryLens",
@@ -22,18 +24,47 @@ color_map = {
     "Второстепенный":  {"bg": "#E1F5EE", "text": "#085041"}
 }
 
-def get_unsplash_image(char_name, book_name, emotion):
-    try:
-        unsplash_key = st.secrets["UNSPLASH_ACCESS_KEY"]
-        query = f"{char_name} {book_name} portrait"
-        url = f"https://api.unsplash.com/search/photos?query={query}&per_page=1&client_id={unsplash_key}"
-        response = requests.get(url, timeout=5)
-        data = response.json()
-        if data.get("results"):
-            return data["results"][0]["urls"]["regular"]
-    except:
-        pass
+used_images = set()
+
+def build_query(char):
+    gender = char.get("gender", "")
+    emotion = char.get("emotion", "")
+    role = char.get("role", "")
+    return f"{gender} {emotion} {role} portrait face cinematic lighting -group -crowd"
+
+def get_character_image(char, max_attempts=3):
+    query = build_query(char)
+    url = "https://api.unsplash.com/search/photos"
+    for _ in range(max_attempts):
+        try:
+            response = requests.get(url, params={
+                "query": query,
+                "client_id": UNSPLASH_KEY,
+                "per_page": 10
+            }, timeout=5)
+            data = response.json()
+            for img in data.get("results", []):
+                if img["id"] not in used_images:
+                    used_images.add(img["id"])
+                    return img["urls"]["regular"]
+        except:
+            pass
+        time.sleep(1)
     return None
+
+def show_image(url, colors, initials):
+    if url:
+        try:
+            st.image(url, use_container_width=True)
+            return
+        except:
+            pass
+    st.markdown(f"""
+    <div style="background:{colors['bg']};color:{colors['text']};
+    width:100%;aspect-ratio:1;border-radius:12px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:48px;font-weight:500;">{initials}</div>
+    """, unsafe_allow_html=True)
 
 book_title = st.text_input("Название книги:", placeholder="Например: Мастер и Маргарита")
 
@@ -78,8 +109,9 @@ if st.button("Анализировать", type="primary", use_container_width=T
 Формат каждого персонажа:
 {{
   "name": "Имя персонажа",
+  "gender": "male или female",
   "role": "Главный герой / Главная героиня / Антагонист / Второстепенный",
-  "emotion": "Основная эмоция",
+  "emotion": "Основная эмоция на английском (например: melancholy, love, anger)",
   "goal": "Главная цель в одном предложении",
   "conflict": "Главный конфликт в одном предложении"
 }}"""
@@ -95,15 +127,8 @@ if st.button("Анализировать", type="primary", use_container_width=T
             with st.container(border=True):
                 col_img, col_info = st.columns([1, 2])
                 with col_img:
-                    img_url = get_unsplash_image(char['name'], book_title, char['emotion'])
-                    if img_url:
-                        st.image(img_url, use_container_width=True)
-                    else:
-                        st.markdown(f"""
-                        <div style="background:{colors['bg']};color:{colors['text']};width:100%;aspect-ratio:1;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:48px;font-weight:500;">
-                        {initials}
-                        </div>
-                        """, unsafe_allow_html=True)
+                    img_url = get_character_image(char)
+                    show_image(img_url, colors, initials)
                 with col_info:
                     st.markdown(f"### {char['name']}")
                     st.markdown(f"<span style='background:{colors['bg']};color:{colors['text']};padding:2px 10px;border-radius:8px;font-size:12px'>{char['role']}</span>", unsafe_allow_html=True)
