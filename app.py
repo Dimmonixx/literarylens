@@ -62,6 +62,9 @@ if "messages" not in st.session_state:
 if "book_title" not in st.session_state:
     st.session_state.book_title = ""
 
+if "meta" not in st.session_state:
+    st.session_state.meta = {}
+
 def build_query(char):
     gender = char.get("gender", "")
     emotion = char.get("emotion_en", "")
@@ -172,7 +175,31 @@ if analyze_btn:
             char["img_url"] = get_character_image(char)
 
 if st.session_state.analysis:
-    st.success("Готово!")
+    placeholder = st.empty()
+    placeholder.success("Анализирую произведение...")
+    time.sleep(5)
+    placeholder.empty()
+
+    with st.spinner("Определяю автора и год..."):
+        meta_response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "Отвечай ТОЛЬКО валидным JSON без markdown."},
+                {"role": "user", "content": f"Книга: {st.session_state.book_title}\n\nВерни JSON:\n{{\"title\": \"Полное название\", \"author\": \"Автор\", \"year\": \"Год издания\"}}"}
+            ]
+        )
+        meta = json.loads(meta_response.choices[0].message.content)
+        st.session_state.meta = meta
+
+    st.markdown(f"""
+    <div style="text-align:center;padding:40px 20px 20px;">
+        <div style="color:#9B8EC4;font-size:14px;letter-spacing:3px;text-transform:uppercase;margin-bottom:8px">Произведение</div>
+        <div style="color:#2D1B6B;font-size:42px;font-weight:700;margin-bottom:8px">{meta['title']}</div>
+        <div style="color:#6C63FF;font-size:20px;font-weight:400;margin-bottom:4px">{meta['author']}</div>
+        <div style="color:#9B8EC4;font-size:16px">{meta['year']}</div>
+    </div>
+    """, unsafe_allow_html=True)
+    st.divider()
     st.markdown(st.session_state.analysis)
     st.divider()
     st.subheader("🎬 Ключевые сцены")
