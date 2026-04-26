@@ -65,6 +65,9 @@ if "book_title" not in st.session_state:
 if "meta" not in st.session_state:
     st.session_state.meta = {}
 
+if "scroll_to" not in st.session_state:
+    st.session_state.scroll_to = ""
+
 def build_query(char):
     gender = char.get("gender", "")
     emotion = char.get("emotion_en", "")
@@ -116,10 +119,14 @@ with st.sidebar:
     if st.session_state.analysis:
         st.divider()
         st.markdown("### 📖 Навигация")
-        st.markdown("[🎬 Ключевые сцены](#)")
-        st.markdown("[🎭 Персонажи](#)")
-        st.markdown("[💡 Смыслы и идеи](#)")
-        st.markdown("[💬 Чат с персонажем](#)")
+        if st.button("🎬 Ключевые сцены", use_container_width=True):
+            st.session_state.scroll_to = "scenes"
+        if st.button("🎭 Персонажи", use_container_width=True):
+            st.session_state.scroll_to = "characters"
+        if st.button("💡 Смыслы и идеи", use_container_width=True):
+            st.session_state.scroll_to = "meanings"
+        if st.button("💬 Чат с персонажем", use_container_width=True):
+            st.session_state.scroll_to = "chat"
         
         if st.session_state.active_char:
             st.divider()
@@ -202,7 +209,11 @@ if st.session_state.analysis:
     st.divider()
     st.markdown(st.session_state.analysis)
     st.divider()
+    st.markdown('<div id="scenes"></div>', unsafe_allow_html=True)
     st.subheader("🎬 Ключевые сцены")
+    if st.session_state.scroll_to == "scenes":
+        st.session_state.scroll_to = ""
+        st.markdown('<script>document.getElementById("scenes").scrollIntoView();</script>', unsafe_allow_html=True)
 
     st.toast("⏳ Анализирую сцены...")
     scenes_response = client.chat.completions.create(
@@ -260,7 +271,11 @@ if st.session_state.analysis:
 
     
     st.divider()
+    st.markdown('<div id="characters"></div>', unsafe_allow_html=True)
     st.subheader("🎭 Персонажи")
+    if st.session_state.scroll_to == "characters":
+        st.session_state.scroll_to = ""
+        st.markdown('<script>document.getElementById("characters").scrollIntoView();</script>', unsafe_allow_html=True)
 
     for char in st.session_state.characters:
         colors = color_map.get(char['role'], {"bg": "#F1EFE8", "text": "#444441"})
@@ -282,7 +297,11 @@ if st.session_state.analysis:
                     st.rerun()
 
     st.divider()
+    st.markdown('<div id="meanings"></div>', unsafe_allow_html=True)
     st.subheader("💡 Смыслы и идеи")
+    if st.session_state.scroll_to == "meanings":
+        st.session_state.scroll_to = ""
+        st.markdown('<script>document.getElementById("meanings").scrollIntoView();</script>', unsafe_allow_html=True)
 
     meanings_prompt = "Книга: " + book_title + """
 
@@ -317,7 +336,11 @@ if st.session_state.active_char:
     colors = color_map.get(char['role'], {"bg": "#F1EFE8", "text": "#444441"})
 
     st.divider()
+    st.markdown('<div id="chat"></div>', unsafe_allow_html=True)
     st.subheader(f"💬 Чат с {char['name']}")
+    if st.session_state.scroll_to == "chat":
+        st.session_state.scroll_to = ""
+        st.markdown('<script>document.getElementById("chat").scrollIntoView();</script>', unsafe_allow_html=True)
 
     for msg in st.session_state.messages:
         with st.chat_message(msg["role"]):
