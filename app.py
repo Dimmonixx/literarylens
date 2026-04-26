@@ -119,7 +119,73 @@ with st.sidebar:
     book_title = st.text_input("Название книги:", placeholder="Например: Мастер и Маргарита")
     analyze_btn = st.button("Анализировать", type="primary", use_container_width=True)
         
-    if st.session_state.active_char:
+    # Empty state screen
+    if not st.session_state.book_title and not st.session_state.active_char:
+        st.markdown("""
+        <div style="text-align:center; padding:60px 20px; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius:20px; margin:20px 0;">
+            <div style="font-size:48px; font-weight:700; color:white; margin-bottom:20px; text-shadow:2px 2px 4px rgba(0,0,0,0.3);">
+                🎬 Понимай книги как живой фильм
+            </div>
+            <div style="font-size:18px; color:rgba(255,255,255,0.9); max-width:600px; margin:0 auto;">
+                Общайся с героями, смотри сцены и понимай глубиние смыслы — просто и интересно
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown("""
+        <div style="text-align:center; padding:40px 20px; background:#f8f9fa; border-radius:15px; margin:20px 0;">
+            <div style="font-size:24px; font-weight:600; color:#2d3748; margin-bottom:30px;">
+                📚 Что ты получишь:
+            </div>
+            <div style="color:#495057; line-height:1.8;">
+                <div style="font-size:20px; margin-bottom:15px;">
+                    🎬 Ключевые сцены как в фильме  
+                    🎭 Живых персонажей с эмоциями  
+                    💬 Общение с героями  
+                    🧠 Простое объяснение сложных идей
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown("""
+        <div style="text-align:center; padding:30px 20px; background:#ffffff; border:2px solid #e9ecef; border-radius:10px; margin:20px 0;">
+            <div style="font-size:18px; color:#6c757d; margin-bottom:20px;">
+                🎬 СЦЕНА:
+            </div>
+            <div style="display:flex; justify-content:center; gap:10px; margin-bottom:20px;">
+                <div style="background:#f8f9fa; padding:15px; border-radius:8px; text-align:center; min-width:150px;">
+                    <div style="font-size:14px; color:#495057; margin-bottom:5px;">Мастер и</div>
+                    <div style="font-size:20px; font-weight:600;">Маргарита</div>
+                    <div style="font-size:12px; color:#6c757d;">Булгаков</div>
+                </div>
+                <div style="background:#f8f9fa; padding:15px; border-radius:8px; text-align:center; min-width:150px;">
+                    <div style="font-size:14px; color:#495057; margin-bottom:5px;">Гарри</div>
+                    <div style="font-size:20px; font-weight:600;">Поттер</div>
+                    <div style="font-size:12px; color:#6c757d;">Роулинг</div>
+                </div>
+                <div style="background:#f8f9fa; padding:15px; border-radius:8px; text-align:center; min-width:150px;">
+                    <div style="font-size:14px; color:#495057; margin-bottom:5px;">Преступление</div>
+                    <div style="font-size:20px; font-weight:600;">и</div>
+                    <div style="font-size:12px; color:#6c757d;">наказание</div>
+                </div>
+            </div>
+            <div style="text-align:center; margin-top:30px;">
+                <div style="color:#6c757d; font-size:16px; margin-bottom:10px;">🎭 Хочешь понять, что происходит?</div>
+                <div style="color:#495057; font-size:14px;">Введи книгу и начни путешествие</div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown("""
+        <div style="text-align:center; padding:40px 20px; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius:15px; margin:20px 0;">
+            <div style="font-size:36px; font-weight:700; color:white; margin-bottom:15px;">
+                🚀 Попробовать пример
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        if st.session_state.active_char:
         st.divider()
         st.markdown(f"**Чат с:** {st.session_state.active_char['name']}")
         if st.button("🔄 Сменить персонажа"):
