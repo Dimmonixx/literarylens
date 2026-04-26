@@ -10,12 +10,32 @@ UNSPLASH_KEY = st.secrets["UNSPLASH_ACCESS_KEY"]
 st.set_page_config(
     page_title="LiteraryLens",
     page_icon="📚",
-    layout="centered"
+    layout="wide"
 )
 
-st.title("📚 LiteraryLens")
-st.subheader("Понимай книги через живой опыт")
-st.divider()
+st.markdown("""
+<style>
+    [data-testid="stAppViewContainer"] {
+        background-color: #F0EBF8;
+    }
+    [data-testid="stSidebar"] {
+        background-color: #E8E0F5;
+    }
+    [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {
+        color: #3C3489;
+    }
+    .block-container {
+        padding-top: 2rem;
+    }
+    [data-testid="stContainer"] {
+        background-color: #EDE6F7;
+        border-radius: 12px;
+    }
+    .stInfo {
+        background-color: #DDD6F0 !important;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 color_map = {
     "Главный герой":   {"bg": "#EEEDFE", "text": "#3C3489"},
@@ -83,9 +103,30 @@ def show_image(url, colors, initials):
         font-size:48px;font-weight:500;">{initials}</div>
         """, unsafe_allow_html=True)
 
-book_title = st.text_input("Название книги:", placeholder="Например: Мастер и Маргарита")
+with st.sidebar:
+    st.title("📚 LiteraryLens")
+    st.caption("Понимай книги через живой опыт")
+    st.divider()
+    book_title = st.text_input("Название книги:", placeholder="Например: Мастер и Маргарита")
+    analyze_btn = st.button("Анализировать", type="primary", use_container_width=True)
+    
+    if st.session_state.analysis:
+        st.divider()
+        st.markdown("### 📖 Навигация")
+        st.markdown("🎬 Ключевые сцены")
+        st.markdown("🎭 Персонажи")
+        st.markdown("💡 Смыслы и идеи")
+        st.markdown("💬 Чат с персонажем")
+        
+        if st.session_state.active_char:
+            st.divider()
+            st.markdown(f"**Чат с:** {st.session_state.active_char['name']}")
+            if st.button("🔄 Сменить персонажа"):
+                st.session_state.active_char = None
+                st.session_state.messages = []
+                st.rerun()
 
-if st.button("Анализировать", type="primary", use_container_width=True):
+if analyze_btn:
     if not book_title:
         st.warning("Введи название книги!")
     else:
@@ -250,11 +291,6 @@ if st.session_state.active_char:
 
     st.divider()
     st.subheader(f"💬 Чат с {char['name']}")
-
-    if st.button("🔄 Выбрать другого персонажа"):
-        st.session_state.active_char = None
-        st.session_state.messages = []
-        st.rerun()
 
     for msg in st.session_state.messages:
         with st.chat_message(msg["role"]):
