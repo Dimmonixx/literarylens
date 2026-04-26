@@ -191,6 +191,35 @@ if st.session_state.analysis:
             """, unsafe_allow_html=True)
 
     st.divider()
+    st.subheader("💡 Смыслы и идеи")
+
+    with st.spinner("Ищу глубокие смыслы..."):
+        meanings_response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "Ты мудрый друг который объясняет книги просто и глубоко. Без академичности."},
+                {"role": "user", "content": f"""Книга: {book_title}
+
+Верни JSON массив с 4 главными смыслами и идеями книги.
+Отвечай ТОЛЬКО на русском языке.
+Формат каждого смысла:
+{
+  "title": "Название идеи (коротко)",
+  "simple": "Объяснение простым языком — как другу, 2-3 предложения",
+  "question": "Вопрос для размышления читателю",
+  "emoji": "Один эмодзи"
+}"""}
+            ]
+        )
+        meanings = json.loads(meanings_response.choices[0].message.content)
+
+    for meaning in meanings:
+        with st.container():
+            st.markdown(f"### {meaning['emoji']} {meaning['title']}")
+            st.markdown(meaning['simple'])
+            st.info(f"🤔 {meaning['question']}")
+
+    st.divider()
     st.subheader("🎭 Персонажи")
 
     for char in st.session_state.characters:
