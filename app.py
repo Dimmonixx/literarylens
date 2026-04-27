@@ -1,4 +1,4 @@
-﻿import streamlit as st
+import streamlit as st
 from openai import OpenAI
 import json
 import requests
@@ -316,19 +316,8 @@ if st.session_state.analysis:
     scenes_response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
-            {"role": "system", "content": "Ты литературный эксперт. Отвечай ТОЛЬКО валидным JSON без markdown и без пояснений."},
-            {"role": "user", "content": f"""Книга: {book_title}
-
-Верни JSON массив с 4 ключевыми сценами книги.
-Отвечай ТОЛЬКО на русском языке.
-Формат каждой сцены:
-{{
-  "title": "Название сцены",
-  "description": "Описание сцены в 2-3 предложениях",
-  "mood": "Настроение сцены одним словом",
-  "mood_emoji": "Один эмодзи отражающий настроение",
-  "characters": "Персонажи через запятую"
-}}"""}
+                    {"role": "system", "content": f"Ты эксперт по книге '{book_title}'. Ты знаешь всех реальных персонажей этой книги. НИКОГДА не выдумывай персонажей. Отвечай ТОЛЬКО валидным JSON без markdown."},
+                    {"role": "user", "content": "Верни JSON массив с 4 ключевыми сценами книги '" + book_title + "'. Используй ТОЛЬКО реальных персонажей из этой конкретной книги. Формат каждой сцены: {\"title\": \"Название\", \"description\": \"Описание 2-3 предложения\", \"mood\": \"Настроение по-русски\", \"mood_emoji\": \"Эмодзи\", \"characters\": \"Только реальные персонажи книги\"}"}
         ]
     )
     scenes = json.loads(scenes_response.choices[0].message.content)
