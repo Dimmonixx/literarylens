@@ -89,6 +89,21 @@ with st.sidebar:
     st.divider()
     book_title = st.text_input("Название книги:", value=st.session_state.quick_book, placeholder="Например: Мастер и Маргарита")
     analyze_btn = st.button("Анализировать", type="primary", use_container_width=True)
+    if st.session_state.analysis:
+        if st.button("🏠 На главную", use_container_width=True):
+            for key in ["analysis", "characters", "scenes", "meanings", "meta", "active_char", "messages", "used_images", "book_title", "quick_book"]:
+                st.session_state[key] = [] if isinstance(st.session_state[key], list) else {} if isinstance(st.session_state[key], dict) else set() if isinstance(st.session_state[key], set) else None if st.session_state[key] is None or isinstance(st.session_state[key], dict) else ""
+            st.session_state.analysis = ""
+            st.session_state.characters = []
+            st.session_state.scenes = []
+            st.session_state.meanings = []
+            st.session_state.meta = {}
+            st.session_state.active_char = None
+            st.session_state.messages = []
+            st.session_state.used_images = set()
+            st.session_state.book_title = ""
+            st.session_state.quick_book = ""
+            st.rerun()
     sidebar_status = st.empty()
     sidebar_progress = st.empty()
     st.divider()
@@ -138,7 +153,7 @@ if not st.session_state.analysis:
 
     st.write("")
     st.markdown("""
-    <div style="background:#EDE7F6;border-radius:16px;padding:30px;text-align:center;margin-top:20px">
+    <div style="background:white;border-radius:16px;padding:30px;text-align:center;margin-top:20px;border:1px solid #E0D5F5">
         <div style="font-size:13px;letter-spacing:2px;color:#9B8EC4;margin-bottom:12px">🎬 СЦЕНА</div>
         <div style="font-size:18px;line-height:1.8;color:#2D1B6B;">Тёмная комната. Тишина.<br>Кто-то делает выбор, который изменит всё.</div>
         <div style="margin-top:16px;color:#6C63FF;font-size:14px">👉 Хочешь понять, что происходит? Введи книгу слева.</div>
