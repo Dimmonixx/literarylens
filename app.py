@@ -117,6 +117,7 @@ with st.sidebar:
         placeholder="Например: Мастер и Маргарита"
     )
     analyze_btn = st.button("Анализировать", type="primary", use_container_width=True)
+    status_box = st.empty()
 
     st.divider()
     st.markdown("**Попробуй:**")
@@ -217,7 +218,7 @@ if analyze_btn:
         st.session_state.used_images = set()
         st.session_state.quick_book = ""
 
-        progress_bar = st.progress(0, text="Читаю произведение...")
+        status_box.info("📖 Читаю произведение...")
 
         # Мета
         meta_response = client.chat.completions.create(
@@ -228,7 +229,7 @@ if analyze_btn:
             ]
         )
         st.session_state.meta = json.loads(meta_response.choices[0].message.content)
-        progress_bar.progress(15, text="Анализирую сюжет...")
+        status_box.info("🔍 Анализирую сюжет...")
 
         # Анализ
         analysis_response = client.chat.completions.create(
@@ -239,7 +240,7 @@ if analyze_btn:
             ]
         )
         st.session_state.analysis = analysis_response.choices[0].message.content
-        progress_bar.progress(35, text="Разбираю ключевые сцены...")
+        status_box.info("🎬 Разбираю сцены...")
 
         # Сцены
         scenes_response = client.chat.completions.create(
@@ -261,12 +262,12 @@ if analyze_btn:
             ]
         )
         st.session_state.characters = json.loads(char_response.choices[0].message.content)
-        progress_bar.progress(75, text="Ищу портреты персонажей...")
+        status_box.info("🎭 Анализирую персонажей...")
 
         for char in st.session_state.characters:
             char["img_url"] = get_character_image(char)
 
-        progress_bar.progress(90, text="Нахожу смыслы...")
+        status_box.info("💡 Нахожу смыслы...")
 
         # Смыслы
         meanings_response = client.chat.completions.create(
@@ -277,9 +278,9 @@ if analyze_btn:
             ]
         )
         st.session_state.meanings = json.loads(meanings_response.choices[0].message.content)
-        progress_bar.progress(100, text="Готово!")
-        time.sleep(0.5)
-        progress_bar.empty()
+        status_box.success("✅ Готово!")
+        time.sleep(1)
+        status_box.empty()
         st.rerun()
 
 # РЕЗУЛЬТАТ
