@@ -117,7 +117,9 @@ with st.sidebar:
         placeholder="Например: Мастер и Маргарита"
     )
     analyze_btn = st.button("Анализировать", type="primary", use_container_width=True)
-    status_box = st.empty()
+    sidebar_status = st.sidebar.empty()
+    sidebar_progress = st.sidebar.progress(0)
+    sidebar_status.caption("📖 Читаю произведение...")
 
     st.divider()
     st.markdown("**Попробуй:**")
@@ -218,7 +220,8 @@ if analyze_btn:
         st.session_state.used_images = set()
         st.session_state.quick_book = ""
 
-        status_box.info("📖 Читаю произведение...")
+        sidebar_progress.progress(0)
+        sidebar_status.caption("📖 Читаю произведение...")
 
         # Мета
         meta_response = client.chat.completions.create(
@@ -229,7 +232,8 @@ if analyze_btn:
             ]
         )
         st.session_state.meta = json.loads(meta_response.choices[0].message.content)
-        status_box.info("🔍 Анализирую сюжет...")
+        sidebar_progress.progress(15)
+        sidebar_status.caption("🔍 Анализирую сюжет...")
 
         # Анализ
         analysis_response = client.chat.completions.create(
@@ -251,7 +255,8 @@ if analyze_btn:
             ]
         )
         st.session_state.scenes = json.loads(scenes_response.choices[0].message.content)
-        progress_bar.progress(55, text="Анализирую персонажей...")
+        sidebar_progress.progress(55)
+        sidebar_status.caption("🎬 Разбираю сцены...")
 
         # Персонажи
         char_response = client.chat.completions.create(
@@ -262,12 +267,14 @@ if analyze_btn:
             ]
         )
         st.session_state.characters = json.loads(char_response.choices[0].message.content)
-        status_box.info("🎭 Анализирую персонажей...")
+        sidebar_progress.progress(75)
+        sidebar_status.caption("🖼 Ищу портреты...")
 
         for char in st.session_state.characters:
             char["img_url"] = get_character_image(char)
 
-        status_box.info("💡 Нахожу смыслы...")
+        sidebar_progress.progress(90)
+        sidebar_status.caption("💡 Нахожу смыслы...")
 
         # Смыслы
         meanings_response = client.chat.completions.create(
@@ -278,9 +285,11 @@ if analyze_btn:
             ]
         )
         st.session_state.meanings = json.loads(meanings_response.choices[0].message.content)
-        status_box.success("✅ Готово!")
+        sidebar_progress.progress(100)
+        sidebar_status.caption("✅ Готово!")
         time.sleep(1)
-        status_box.empty()
+        sidebar_progress.empty()
+        sidebar_status.empty()
         st.rerun()
 
 # РЕЗУЛЬТАТ
