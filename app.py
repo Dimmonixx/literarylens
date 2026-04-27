@@ -142,6 +142,8 @@ with st.sidebar:
             st.rerun()
 
     analyze_btn = st.button("Анализировать", type="primary", use_container_width=True)
+    if st.session_state.get("loading"):
+        st.progress(st.session_state.get("progress", 0))
 
     if st.session_state.analysis:
         st.divider()
@@ -248,27 +250,23 @@ if analyze_btn:
     if not book_title:
         st.warning("Введи название книги!")
     else:
-        with st.spinner("✨ Погружаемся в книгу..."):
-            progress = st.progress(0, text="Читаю произведение...")
-            time.sleep(0.5)
-            progress.progress(20, text="Анализирую сюжет...")
-            st.session_state.book_title = book_title
-            st.session_state.active_char = None
-            st.session_state.messages = []
-            st.session_state.used_images = set()
-            st.session_state.quick_book = ""
+        st.session_state.book_title = book_title
+        st.session_state.active_char = None
+        st.session_state.messages = []
+        st.session_state.used_images = set()
+        st.session_state.quick_book = ""
+        st.session_state.loading = True
+        st.session_state.progress = 10
 
-            st.toast("⏳ Анализирую...")
-            meta_response = client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[
-                    {"role": "system", "content": "Отвечай ТОЛЬКО валидным JSON без markdown."},
-                    {"role": "user", "content": f"Книга: {book_title}\n\nВерни JSON:\n{{\"title\": \"Полное название\", \"author\": \"Автор\", \"year\": \"Год издания\"}}"}
-                ]
-            )
-            st.session_state.meta = json.loads(meta_response.choices[0].message.content)
+        meta_response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "Отвечай ТОЛЬКО валидным JSON без markdown."},
+                {"role": "user", "content": f"Книга: {book_title}\n\nВерни JSON:\n{{\"title\": \"Полное название\", \"author\": \"Автор\", \"year\": \"Год издания\"}}"}
+            ]
+        )
+        st.session_state.meta = json.loads(meta_response.choices[0].message.content)
 
-        st.toast("⏳ Анализирую...")
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
@@ -278,7 +276,6 @@ if analyze_btn:
         )
         st.session_state.analysis = response.choices[0].message.content
 
-        st.toast("⏳ Анализирую персонажей...")
         char_response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
@@ -328,14 +325,13 @@ if st.session_state.analysis:
         st.session_state.scroll_to = ""
         st.markdown('<script>document.getElementById("scenes").scrollIntoView();</script>', unsafe_allow_html=True)
 
-    st.toast("⏳ Анализирую сцены...")
-    scenes_response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-                    {"role": "system", "content": "Ты литературный эксперт. Отвечай ТОЛЬКО валидным JSON без markdown и без пояснений."},
-                    {"role": "user", "content": f"Книга: {book_title}\n\nВерни JSON массив с 4 ключевыми сценами. Используй только реальных персонажей этой книги.\nФормат:\n[{{\"title\": \"Название\", \"description\": \"Описание\", \"mood\": \"Настроение\", \"mood_emoji\": \"Эмодзи\", \"characters\": \"Персонажи\"}}]"}
-        ]
-    )
+        scenes_response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": f"Ты знаток книги '{book_title}'. Отвечай ТОЛЬКО валидным JSON. Используй ТОЛЬКО реальных персонажей именно этой книги. Никогда не придумывай персонажей."},
+                {"role": "user", "content": f"Верни JSON массив с 4 ключевыми сценами книги '{book_title}'. Каждая сцена: {{\"title\": \"Название\", \"description\": \"Описание\", \"mood\": \"Настроение по-русски\", \"mood_emoji\": \"Эмодзи\", \"characters\": \"Реальные персонажи из книги через запятую\"}}"}
+            ]
+        )
     scenes = json.loads(scenes_response.choices[0].message.content)
 
     mood_colors = {
@@ -417,14 +413,13 @@ if st.session_state.analysis:
   "emoji": "Один эмодзи"
 }"""
 
-    st.toast("⏳ Ищу глубокие смыслы...")
-    meanings_response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-                    {"role": "system", "content": "Ты мудрый друг. Отвечай ТОЛЬКО валидным JSON без markdown и без пояснений."},
-                    {"role": "user", "content": f"Книга: {book_title}\n\nВерни JSON массив с 4 смыслами книги.\nФормат:\n[{{\"emoji\": \"Эмодзи\", \"title\": \"Название идеи\", \"simple\": \"Объяснение\", \"question\": \"Вопрос читателю\"}}]"}
-        ]
-    )
+        meanings_response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "Ты мудрый друг. Отвечай ТОЛЬКО валидным JSON без markdown и без пояснений."},
+                {"role": "user", "content": f"Книга: {book_title}\n\nВерни JSON массив с 4 смыслами книги.\nФормат:\n[{{\"emoji\": \"Эмодзи\", \"title\": \"Название идеи\", \"simple\": \"Объяснение\", \"question\": \"Вопрос читателю\"}}]"}
+            ]
+        )
     meanings = json.loads(meanings_response.choices[0].message.content)
 
     for meaning in meanings:
