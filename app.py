@@ -118,7 +118,6 @@ with st.sidebar:
     st.caption("Понимай книги так, будто ты внутри истории")
     st.divider()
     book_title = st.text_input("Название книги:", value=st.session_state.quick_book, placeholder="Например: Мастер и Маргарита")
-    analyze_btn = st.button("Анализировать", type="primary", use_container_width=True)
     st.divider()
     st.markdown("**Попробуй:**")
     books_list = [
@@ -141,6 +140,23 @@ with st.sidebar:
         if st.button(f"📖 {book}", use_container_width=True, key=f"quick_{book}"):
             st.session_state.quick_book = book
             st.rerun()
+
+    analyze_btn = st.button("Анализировать", type="primary", use_container_width=True)
+
+    if st.session_state.analysis:
+        st.divider()
+        st.markdown("### 📖 Содержание")
+        st.markdown("🎬 Ключевые сцены")
+        st.markdown("🎭 Персонажи")
+        st.markdown("💡 Смыслы и идеи")
+        st.markdown("💬 Чат с персонажем")
+        if st.session_state.active_char:
+            st.divider()
+            st.markdown(f"**Чат с:** {st.session_state.active_char['name']}")
+            if st.button("🔄 Сменить персонажа"):
+                st.session_state.active_char = None
+                st.session_state.messages = []
+                st.rerun()
 
     if st.session_state.analysis:
         st.divider()
@@ -316,8 +332,8 @@ if st.session_state.analysis:
     scenes_response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
-                    {"role": "system", "content": f"Ты эксперт по книге '{book_title}'. Ты знаешь всех реальных персонажей этой книги. НИКОГДА не выдумывай персонажей. Отвечай ТОЛЬКО валидным JSON без markdown."},
-                    {"role": "user", "content": "Верни JSON массив с 4 ключевыми сценами книги '" + book_title + "'. Используй ТОЛЬКО реальных персонажей из этой конкретной книги. Формат каждой сцены: {\"title\": \"Название\", \"description\": \"Описание 2-3 предложения\", \"mood\": \"Настроение по-русски\", \"mood_emoji\": \"Эмодзи\", \"characters\": \"Только реальные персонажи книги\"}"}
+                    {"role": "system", "content": "Ты литературный эксперт. Отвечай ТОЛЬКО валидным JSON без markdown и без пояснений."},
+                    {"role": "user", "content": f"Книга: {book_title}\n\nВерни JSON массив с 4 ключевыми сценами. Используй только реальных персонажей этой книги.\nФормат:\n[{{\"title\": \"Название\", \"description\": \"Описание\", \"mood\": \"Настроение\", \"mood_emoji\": \"Эмодзи\", \"characters\": \"Персонажи\"}}]"}
         ]
     )
     scenes = json.loads(scenes_response.choices[0].message.content)
@@ -405,8 +421,8 @@ if st.session_state.analysis:
     meanings_response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
-            {"role": "system", "content": "Ты мудрый друг который объясняет книги просто и глубоко. Без академичности. Отвечай ТОЛЬКО валидным JSON без markdown и без пояснений."},
-            {"role": "user", "content": meanings_prompt}
+                    {"role": "system", "content": "Ты мудрый друг. Отвечай ТОЛЬКО валидным JSON без markdown и без пояснений."},
+                    {"role": "user", "content": f"Книга: {book_title}\n\nВерни JSON массив с 4 смыслами книги.\nФормат:\n[{{\"emoji\": \"Эмодзи\", \"title\": \"Название идеи\", \"simple\": \"Объяснение\", \"question\": \"Вопрос читателю\"}}]"}
         ]
     )
     meanings = json.loads(meanings_response.choices[0].message.content)
